@@ -61,20 +61,19 @@ module "alb" {
 
   load_balancer_type = "application"
 
-  vpc_id             = local.vpc_id
-  subnets            = local.public_subnet_ids
-  security_groups    = local.alb_security_group_ids
+  vpc_id          = local.vpc_id
+  subnets         = local.public_subnet_ids
+  security_groups = local.alb_security_group_ids
 
   # access_logs = {
   #   bucket = "my-alb-logs"
   # }
 
-  target_groups = [
+  http_tcp_listeners = [
     {
-      name_prefix      = "http-"
-      backend_protocol = "HTTP"
-      backend_port     = 80
-      target_type      = "instance"
+      port               = 80
+      protocol           = "HTTP"
+      target_group_index = 0
     }
   ]
 
@@ -87,13 +86,37 @@ module "alb" {
   #   }
   # ]
 
-  http_tcp_listeners = [
+  target_groups = [
     {
-      port               = 80
-      protocol           = "HTTP"
-      target_group_index = 0
+      name_prefix          = "http-"
+      backend_protocol     = "HTTP"
+      backend_port         = 80
+      target_type          = "instance"
+      deregistration_delay = 10
+      health_check = {
+        enabled             = true
+        interval            = 30
+        path                = "/"
+        port                = "traffic-port"
+        healthy_threshold   = 5
+        unhealthy_threshold = 2
+        timeout             = 5
+        protocol            = "HTTP"
+        matcher             = "200-399"
+      }
+      tags = {
+        InstanceTargetGroupTag = "was"
+      }
     }
   ]
 
   tags = var.tags
+}
+
+resource "aws_alb_target_group_attachment" "was" {
+  count = length(local.was_ids)
+
+  target_group_arn = module.alb.target_group_arns[count.index] //aws_alb_target_group.was.arn
+  target_id        = local.was_ids.id[count.index]
+  port             = 80
 }

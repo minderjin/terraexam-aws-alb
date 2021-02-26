@@ -71,7 +71,7 @@ module "alb" {
 
   target_groups = [
     {
-      name_prefix      = "${var.name}-http-"
+      name_prefix      = "http-"
       backend_protocol = "HTTP"
       backend_port     = 80
       target_type      = "instance"

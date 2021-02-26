@@ -117,6 +117,6 @@ resource "aws_alb_target_group_attachment" "was" {
   count = length(local.was_ids)
 
   target_group_arn = module.alb.target_group_arns[count.index] //aws_alb_target_group.was.arn
-  target_id        = local.was_ids.id[count.index]
+  target_id        = local.was_ids[count.index]
   port             = 80
 }

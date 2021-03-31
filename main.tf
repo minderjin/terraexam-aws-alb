@@ -57,9 +57,8 @@ module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "~> 5.0"
 
-  name = "${var.name}-alb"
-
-  load_balancer_type = "application"
+  name               = "${var.name}-alb"
+  load_balancer_type = var.load_balancer_type
 
   vpc_id          = local.vpc_id
   subnets         = local.public_subnet_ids
@@ -69,46 +68,9 @@ module "alb" {
   #   bucket = "my-alb-logs"
   # }
 
-  http_tcp_listeners = [
-    {
-      port               = 80
-      protocol           = "HTTP"
-      target_group_index = 0
-    }
-  ]
-
-  # https_listeners = [
-  #   {
-  #     port               = 443
-  #     protocol           = "HTTPS"
-  #     certificate_arn    = "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012"
-  #     target_group_index = 0
-  #   }
-  # ]
-
-  target_groups = [
-    {
-      name_prefix          = "http-"
-      backend_protocol     = "HTTP"
-      backend_port         = 80
-      target_type          = "instance"
-      deregistration_delay = 300
-      health_check = {
-        enabled             = true
-        interval            = 30
-        path                = "/"
-        port                = "traffic-port"
-        healthy_threshold   = 5
-        unhealthy_threshold = 2
-        timeout             = 5
-        protocol            = "HTTP"
-        matcher             = "200-399"
-      }
-      tags = {
-        InstanceTargetGroupTag = "was"
-      }
-    }
-  ]
+  http_tcp_listeners = var.http_tcp_listeners
+  https_listeners    = var.https_listeners
+  target_groups      = var.target_groups
 
   tags = var.tags
 }
